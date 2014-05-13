@@ -19,7 +19,6 @@ seasons_df<-dbGetQuery(con, 'SELECT DISTINCT nds.value AS season FROM nd_experim
 seasons<-seasons_df[,1]
 #start UI
 shinyUI(fluidPage(
-  titlePanel("Print Bar Plot"),
   sidebarLayout(
     sidebarPanel(
 #Two select inputs, one for attributes and the other for seasons      

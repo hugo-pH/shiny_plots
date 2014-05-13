@@ -22,7 +22,6 @@ postgresqlCloseConnection(con)
 lines<-lines_df[,1]
 #start UI
 shinyUI(fluidPage(
-  titlePanel("Evaluation of phenotipical traits in different seasons"),
   sidebarLayout(
     sidebarPanel(
 #Two select inputs, one for attributes and the other for lines    
