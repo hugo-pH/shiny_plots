@@ -1,8 +1,7 @@
-#server.R
+#server.R, plotdb_2
 #Load libraries for shiny, plots and PgSQL connection
 library(shiny)
 library(ggplot2)
-
 library("RPostgreSQL")
 
 #Script where the dataplot function is defined
@@ -14,12 +13,12 @@ shinyServer(function(input, output) {
   output$map<-renderPlot({  
     
   attribute <- input$attribute  
-  stk<- input$line
+    
   stock<-input$stocks
+#Create a list from the selected values of the selectInput widget. The list will be supplied to the printplot function which needs a stock list as an argument   
   stk.ls[stock]<-stock
-#   paste(stk.ls[1], stk.ls[2], "class:",class(stk.ls))
 
-                          
+#Execute the function defined in barplot.R
 p<-printplot(stk=stk.ls, attr=attribute)
    print(p)
 })
