@@ -1,12 +1,14 @@
 #Define the function for plotdb_2
-#This function creates a grouped barplot using the provided stock names.
+#This function creates a grouped barplot using the provided stock names plus the control line which is coded in the inside the function.
 #Two arguments are provided, the attribute name (character vector) and a list of stock names.
-#The function retrive the data from the DB and obtains the mean and sd values for each stock and year and then creates the plot.
+#The function retrive the data from the DB and obtains the mean and sd values for each stock. All the seasons are retrieved.
 
 
-  printplot<- function(attr, stk){
-
+  printplot<- function(attr, stk, ctrl){
+      
+    if (ctrl == T){
     stk["control"]<-"chaendler" ##Add the control line name to the list of stocks
+    }
     drv<-dbDriver("PostgreSQL")
     con <- postgresqlNewConnection(drv=drv, dbname="drupal", host="10.0.0.16", user="drupal", port ="5432")
     #Set the search path to chado, public in the database

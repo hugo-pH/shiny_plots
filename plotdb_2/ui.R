@@ -34,7 +34,9 @@ shinyUI(fluidPage(
                   choices = lines,
                   selected = NULL,
                   multiple = TRUE),#Allow to select multiple values
-
+      checkboxInput("control", 
+                    label = "Add control vaules",
+                    value = FALSE),
           submitButton("Submit")
   ),
 mainPanel( 
