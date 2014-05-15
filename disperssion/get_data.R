@@ -1,0 +1,37 @@
+query_db<-function(attr, stk, year){
+
+drv<-dbDriver("PostgreSQL")
+con <- postgresqlNewConnection(drv=drv, dbname="drupal", host="10.0.0.16", user="drupal", port ="5432")
+#Set the search path to chado, public in the database
+path<-postgresqlExecStatement(con, "SET search_path TO chado, public;")
+dbClearResult(path)
+query=("SELECT s2.uniquename AS stock, esp.value AS season, c1.name AS attribute, 
+       p.value AS value, epr.value AS date 
+       FROM stock s 
+       JOIN stock_relationship sr ON sr.subject_id = s.stock_id
+       JOIN stock s2 ON sr.object_id=s2.stock_id
+       JOIN nd_experiment_stock es ON s.stock_id = es.stock_id
+       JOIN nd_experiment_stockprop esp ON es.nd_experiment_stock_id = esp.nd_experiment_stock_id         
+       LEFT JOIN chado_stock ck ON s.stock_id = ck.stock_id         
+       JOIN nd_experiment_phenotype ep ON es.nd_experiment_id = ep.nd_experiment_id             
+       JOIN nd_experimentprop epr ON ep.nd_experiment_id = epr.nd_experiment_id            
+       JOIN phenotype p ON ep.phenotype_id = p.phenotype_id          
+       JOIN cvterm c1 ON p.attr_id = c1.cvterm_id            
+       WHERE s2.uniquename = $1 AND c1.name = $2 AND esp.value = $3")
+
+
+#Send the query with the given arguments
+res<-postgresqlExecStatement(con=con, statement=query, params= c(stk, attr, year))
+#Fetch the results to a df
+results<-fetch(res, n=-1)
+#Set the values column of the phenotypic attr to numeric since in the DB is defined as character
+results$value<-as.numeric(results$value)
+dbClearResult(res)
+postgresqlCloseConnection(con)
+#Check if there is data for the selected values. Stop the execution in the case there is no data retrieved.
+if (nrow(results) == 0) {
+  err<-paste("No data, please choose other stock")
+  stop(err)
+}
+return(results)
+}
