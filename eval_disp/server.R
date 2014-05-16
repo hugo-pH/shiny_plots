@@ -25,13 +25,9 @@ shinyServer(function(input, output) {
         p<-ggplot(data(), aes(factor(season), value)) +
         labs(x="year") +
         scale_fill_discrete(name="line") #legend title
-#         if (input$control == F){
-#           p <- p + geom_boxplot()
-#         }
-#       else{
+
         p <- p  +  geom_boxplot(aes(fill = factor(stock))) 
-#       }
-      print(p)
+        print(p)
   })
     output$table1<- renderDataTable({
       data()
