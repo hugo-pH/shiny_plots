@@ -30,7 +30,7 @@ shinyUI(fluidPage(
                   choices = attr_names,
                   selected = NULL),
       selectInput("stocks",
-                  label="Choose a phenotypic attribute",
+                  label="Choose a stock",
                   choices = lines,
                   selected = NULL,
                   multiple = TRUE),#Allow to select multiple values
