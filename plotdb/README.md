@@ -7,3 +7,5 @@ The data is represented in a barplot, where bar colours are determined by the st
 
 An example of the plot output:
 ![Alt text](../images/plotdb.png?raw=true)
+
+You can take a look here: http://gefpdb.net/phen_trait_season
