@@ -32,30 +32,34 @@ shinyUI(fluidPage(
       selectInput("at1",
                   label="Choose the x phenotypic attribute",
                   choices = attr_names,
-                  selected = "empty"),
+                  selected = NULL),
       selectInput("at2",
                   label="Choose the y phenotypic attribute",
                   choices = attr_names,
-                  selected = "empty"),
-      selectInput("stocks",
-                  label="Choose a stock",
-                  choices = lines,
-                  selected = "empty",
-                  multiple = TRUE),#Allow to select multiple values
-      selectInput("season",
-                  label = "Choose a season",
-                  choices = seasons,
-                  selected = "empty"),
+                  selected = NULL),
       checkboxInput("all",
                     label = "Select all years",
                     value = FALSE),
-      submitButton("Submit")
+      uiOutput("select.season"),
+      uiOutput("select.stk"),
+      
+      #       selectInput("stocks",
+      #                   label="Choose a stock",
+      #                   choices = lines,
+      #                   selected = "empty",
+      #                   multiple = TRUE),#Allow to select multiple values
+      #       selectInput("season",
+      #                   label = "Choose a season",
+      #                   choices = seasons,
+      #                   selected = "empty"),
+
+      actionButton("go","Run")
     ),
     
     mainPanel( 
       plotOutput('plot'),
-    
-    #Avoid error messages to be printed in red color
+      
+      #Avoid error messages to be printed in red color
       tags$style(type="text/css",
                  "#map.shiny-output-error { color: inherit;}",
                  "#map.shiny-output-error:before { content: ; }"

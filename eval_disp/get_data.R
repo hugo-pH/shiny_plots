@@ -13,7 +13,7 @@ query_db<- function(attr, stk, ctrl){
   path<-postgresqlExecStatement(con, "SET search_path TO chado, public;")
   dbClearResult(path)
   query=("SELECT s2.uniquename AS stock, esp.value AS season, c1.name AS attribute, 
-         p.value AS value, epr.value AS date 
+         p.value AS value, epr.value AS date, cvp.value AS unit  
          FROM stock s 
          JOIN stock_relationship sr ON sr.subject_id = s.stock_id
          JOIN stock s2 ON sr.object_id=s2.stock_id
@@ -23,8 +23,9 @@ query_db<- function(attr, stk, ctrl){
          JOIN nd_experiment_phenotype ep ON es.nd_experiment_id = ep.nd_experiment_id             
          JOIN nd_experimentprop epr ON ep.nd_experiment_id = epr.nd_experiment_id            
          JOIN phenotype p ON ep.phenotype_id = p.phenotype_id          
-         JOIN cvterm c1 ON p.attr_id = c1.cvterm_id            
-         WHERE s2.uniquename = $1 AND c1.name = $2")
+         JOIN cvterm c1 ON p.attr_id = c1.cvterm_id
+         JOIN cvtermprop cvp ON cvp.cvterm_id = c1.cvterm_id
+         WHERE s2.uniquename = $1 AND c1.name = $2 AND cvp.type_id=43425")
   #Define the df which will contain the data for ggplot 
   df<-data.frame()
   

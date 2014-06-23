@@ -32,23 +32,18 @@ shinyUI(fluidPage(
       selectInput("attribute",
                   label="Choose a phenotypic attribute",
                   choices = attr_names,
-                  selected = "empy"),
-      selectInput("stocks",
-                  label="Choose a stock",
-                  choices = lines,
-                  selected = "emply"),#Allow to select multiple values
-      selectInput("season",
-                  label = "Choose a season",
-                  choices = seasons,
-                  selected = "empty"),    
-      submitButton("Submit")
+                    selected = "empy"),
+      uiOutput("select.stk"),
+      uiOutput("select.season"),
+      actionButton("go","Run")
+
     ),
     
     mainPanel( 
       #Avoid error messages to be printed in red color
       tabsetPanel(type="tabs",
-                  tabPanel("Histogram", plotOutput("histo")),
-                  tabPanel("Boxplot", plotOutput("box"))
+                  tabPanel("Histogram", plotOutput("histo"), verbatimTextOutput("norm")),
+                  tabPanel("Q-Q plot", plotOutput("qqplot"))
                   ),
           
       tags$style(type="text/css",

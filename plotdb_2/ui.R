@@ -29,15 +29,14 @@ shinyUI(fluidPage(
                   label="Choose a phenotypic attribute",
                   choices = attr_names,
                   selected = NULL),
-      selectInput("stocks",
-                  label="Choose a stock",
-                  choices = lines,
-                  selected = NULL,
-                  multiple = TRUE),#Allow to select multiple values
-      checkboxInput("control", 
-                    label = "Add control vaules",
+      checkboxInput("mult", 
+                    label = "Choose multiple stocks (no statistical analysis possible)",
                     value = FALSE),
-          submitButton("Submit")
+      uiOutput("stk"),
+      uiOutput("list"),
+      actionButton("go","Run")
+      
+          
   ),
 mainPanel( 
   #Avoid error messages to be printed in red color

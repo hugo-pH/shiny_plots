@@ -13,6 +13,10 @@ attr_df<-dbGetQuery(con, 'SELECT DISTINCT c.name AS attribute FROM cvterm c
 #Transform the #1 column to a vector, this is necessary since the 'selectInput'
 # widget needs a vector for the 'choices' parameter
 attr_names<-attr_df[,1]
+#Get all the seasons
+seasons_df<-dbGetQuery(con, 'SELECT DISTINCT nds.value AS season FROM nd_experiment_stockprop nds ORDER BY  nds.value ASC')
+#Same transformation than in the previous query
+seasons<-seasons_df[,1]
 #Get the stock names from the DB
 lines_df<-dbGetQuery(con, 'SELECT DISTINCT s2.uniquename AS stock
                      FROM stock s 
@@ -29,16 +33,11 @@ shinyUI(fluidPage(
                   label="Choose a phenotypic attribute",
                   choices = attr_names,
                   selected = NULL),
-      selectInput("stocks",
-                  label="Choose a stock",
-                  choices = lines,
-                  selected = NULL,
-                  multiple = TRUE
-                  ),
+      uiOutput("select.stk"),
       checkboxInput("control", 
                     label = "Add control vaules",
                     value = FALSE),
-      submitButton("Submit")
+      actionButton("go","Run")
     ),
     mainPanel( 
       #Avoid error messages to be printed in red color
