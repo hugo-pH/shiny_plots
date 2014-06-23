@@ -13,36 +13,38 @@ JOIN phenotype p ON  c.cvterm_id = p.attr_id ORDER BY c.name ASC')
 #Transform the #1 column to a vector, this is necessary since the 'selectInput'
 # widget needs a vector for the 'choices' parameter
 attr_names<-attr_df[,1]
-#Get all the seasons
-seasons_df<-dbGetQuery(con, 'SELECT DISTINCT nds.value AS season FROM nd_experiment_stockprop nds ORDER BY  nds.value ASC')
-#Same transformation than in the previous query
-seasons<-seasons_df[,1]
 #start UI
 shinyUI(fluidPage(
   sidebarLayout(
     sidebarPanel(
-#Two select inputs, one for attributes and the other for seasons      
+#Two select inputs, one for attributes and the other for seasons and a 'Run' button.
+#The attribute input is  fixed and the values are in the attr_names vector.
+#The season input is created depending on the attribute selection and it's defined in the server.R file.
+#The 'Run' button prevents shiny for starting before any option is selected. 
       selectInput("attribute",
                   label="Choose a phenotypic attribute",
                   choices = attr_names,
                   selected = NULL),
-      selectInput("season",
-                  label = "Choose a season",
-                  choices = seasons,
-                  selected = NULL),
-#A submit button to send the selected parameters, if it's not present, the results are sended inmediately
-      submitButton("Submit")
+      uiOutput("select.season"),
+      actionButton("go","Run")
+      
   ),
   
   mainPanel( 
-    #Avoid error messages to appear in the page
-    plotOutput('map'),
+    #Multiple tabs
+    tabsetPanel(id="tabs",
+                tabPanel("Plot", plotOutput("plot")),
+                tabPanel("Normality", verbatimTextOutput("norm")),
+                tabPanel("Homocedasticity", verbatimTextOutput("homo")),
+                tabPanel("Differences", verbatimTextOutput("aov")),
+                tabPanel("Groups", verbatimTextOutput("groups")),
+                tabPanel("Download data", downloadButton("downloadData"))
+                ),   
+    #Avoid error messages to appear in the page, not working
     tags$style(type="text/css",
                "#map.shiny-output-error { color: inherit;}",
                "#map.shiny-output-error:before { content: ; }"
    )
-            
-
-  )
+   )
   )
   ))
