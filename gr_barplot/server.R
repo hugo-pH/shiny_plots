@@ -32,8 +32,7 @@ bulkdata$value<-as.numeric(bulkdata$value)
 postgresqlCloseConnection(con)
 
 #Script where the dataplot function is defined
-source("barplot.R")
-source("plot_no_stat.R")
+source("functions.R")
 stk.ls<-list()
 shinyServer(function(input, output) {
   #Reactive object to subset the bulkdata depending on the attribute input. It will be used to determine which stocks are available for a given attribute.

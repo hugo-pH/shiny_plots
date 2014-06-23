@@ -63,7 +63,7 @@ shinyServer(function(input, output) {
   
   #Plot tab
   output$plot<-renderPlot({
-    if (input$go==0){ # if the 'Run' button is not clicked, return nothing.
+    if (input$go==0){ # if the 'Run' button is not clicked, returns nothing.
       
       return(NULL)
     }else{ # Else, print the plot. The printplot function is defined in barplot.R
