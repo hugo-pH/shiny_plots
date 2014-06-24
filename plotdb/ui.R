@@ -37,7 +37,7 @@ shinyUI(fluidPage(
                 tabPanel("Normality", verbatimTextOutput("norm")),
                 tabPanel("Homocedasticity", verbatimTextOutput("homo")),
                 tabPanel("Differences", verbatimTextOutput("aov")),
-                tabPanel("Groups", verbatimTextOutput("groups")),
+                tabPanel("Post-hoc", verbatimTextOutput("groups")),
                 tabPanel("Download data", downloadButton("downloadData"))
                 ),   
     #Avoid error messages to appear in the page, not working
