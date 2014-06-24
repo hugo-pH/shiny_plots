@@ -24,11 +24,11 @@ shinyUI(fluidPage(
       #Two selectInputs to select for stocks, one select for a unique stock and the other for multiple stocks. 
       #The 'Run' button prevents shiny for starting before any option is selected. 
       selectInput("attribute",
-                  label="Choose a phenotypic attribute",
+                  label="Select a phenotypic attribute",
                   choices = attr_names,
                   selected = NULL),
       checkboxInput("mult", 
-                    label = "Choose multiple stocks (no statistical analysis possible)",
+                    label = "Select multiple stocks (no statistical analysis possible)",
                     value = FALSE),
       uiOutput("stk"),
       uiOutput("list"),

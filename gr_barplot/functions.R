@@ -168,7 +168,7 @@ printplot<- function(data, stk){
     ##Plot      
     ##x is mapped to season, y to mean values, groups of bars to stock and colour to 'color' column
     p<-ggplot(dataplot, aes(season, mean, group=stock, fill=color))  +
-      scale_fill_manual(values=c("darkorchid1", "darkolivegreen2", "orange1")) #Define the colours used in the barplot
+      scale_fill_manual(name="Differences", values=c("darkorchid1", "darkolivegreen2", "orange1")) #Define the colours used in the barplot
     
     ##Check if the season.test function has returned a pval < 0.05 for the problem stock. stk[[-2]] means the stock which is not the control. Control is always in position 2 because is appended to the stk list inside the function 
     if (st.year[[(stk[[-2]])]][["pval"]] < 0.05){

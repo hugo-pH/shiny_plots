@@ -49,7 +49,7 @@ shinyServer(function(input, output) {
       stk.opt<-as.vector(options[["stock"]])#Get the stock names from the subsetted df, transforms it in a vector. 
      
       selectInput("stock",
-                        label="Choose a stock",
+                        label="Select an individual stock",
                         choices = stk.opt,
                         selected = NULL)                  
     }
