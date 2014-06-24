@@ -1,7 +1,7 @@
 shiny_plots
 ===========
 
-#Description
+##Description
 
 A collection of shiny apps to represent biological phenotypic data from a Chado DB.
 
@@ -16,7 +16,7 @@ The available plots are:
 * Grouped boxplot
 * Scatter plot
 
-#Acknowledgements
+##Acknowledgements
 
 Many thanks to the developers and the community of the R-project and the packages used in this repository.  
 *R-project: http://www.r-project.org/
