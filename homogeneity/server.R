@@ -39,8 +39,7 @@ shinyServer(function(input, output) {
   #Create the selectInput for seasons. 
   output$select.season<-renderUI({
     if (is.null(input$attribute) == TRUE){ # If no attribute is selected, return a empty object.
-    }else{
-      return()
+      return()      
     }else{
       options<-options()
       seas<-as.vector(options[["season"]])
