@@ -1,4 +1,4 @@
-#ui.R, disperssion
+#ui.R, scatter
 #Load library for PgSQL connection
 library("RPostgreSQL")
 #Connect to the database
@@ -13,17 +13,17 @@ attr_df<-dbGetQuery(con, 'SELECT DISTINCT c.name AS attribute FROM cvterm c
 #Transform the #1 column to a vector, this is necessary since the 'selectInput'
 # widget needs a vector for the 'choices' parameter
 attr_names<-attr_df[,1]
-#Get all the seasons
-seasons_df<-dbGetQuery(con, 'SELECT DISTINCT nds.value AS season FROM nd_experiment_stockprop nds ORDER BY  nds.value ASC')
-#Same transformation than in the previous query
-seasons<-seasons_df[,1]
-#Get the stock names from the DB
-lines_df<-dbGetQuery(con, 'SELECT DISTINCT s2.uniquename AS stock
-                     FROM stock s 
-                     JOIN stock_relationship sr ON sr.subject_id = s.stock_id
-                     JOIN stock s2 ON sr.object_id=s2.stock_id ORDER BY s2.uniquename ASC')
+# #Get all the seasons
+# seasons_df<-dbGetQuery(con, 'SELECT DISTINCT nds.value AS season FROM nd_experiment_stockprop nds ORDER BY  nds.value ASC')
+# #Same transformation than in the previous query
+# seasons<-seasons_df[,1]
+# #Get the stock names from the DB
+# lines_df<-dbGetQuery(con, 'SELECT DISTINCT s2.uniquename AS stock
+#                      FROM stock s 
+#                      JOIN stock_relationship sr ON sr.subject_id = s.stock_id
+#                      JOIN stock s2 ON sr.object_id=s2.stock_id ORDER BY s2.uniquename ASC')
 postgresqlCloseConnection(con)
-lines<-lines_df[,1]
+# lines<-lines_df[,1]
 #start UI
 shinyUI(fluidPage(
   sidebarLayout(
@@ -42,17 +42,6 @@ shinyUI(fluidPage(
                     value = FALSE),
       uiOutput("select.season"),
       uiOutput("select.stk"),
-      
-      #       selectInput("stocks",
-      #                   label="Choose a stock",
-      #                   choices = lines,
-      #                   selected = "empty",
-      #                   multiple = TRUE),#Allow to select multiple values
-      #       selectInput("season",
-      #                   label = "Choose a season",
-      #                   choices = seasons,
-      #                   selected = "empty"),
-
       actionButton("go","Run")
     ),
     

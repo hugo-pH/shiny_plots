@@ -31,24 +31,27 @@ bulkdata<- dbGetQuery(con, "SELECT s2.uniquename AS stock, s.uniquename AS sampl
 bulkdata$value<-as.numeric(bulkdata$value)
 postgresqlCloseConnection(con)
 
+
+#Create a list of df, each one storing values for an unique attribute
 bulk.ls<-split(bulkdata, bulkdata$attribute)
 
-#Script where the query_db function is defined
-source("get_data.R")
 #Define the list which will contain the selected lines
 stk.ls<-list()
+
 shinyServer(function(input, output) {
   
+  #Reactive object to subset the bulkdata depending on the attribute inputs. It will be used to determine which seasons are available for a given attribute.
   op1<-reactive({
     at1=input$at1
     at2=input$at2
-    at1df<-bulk.ls[[at1]]
-    at2df<-bulk.ls[[at2]]
-    merge(at1df, at2df, by=c("stock", "sample", "date", "season"))
+    at1df<-bulk.ls[[at1]] #Get the df from the df list which contains the values of the first input attribute
+    at2df<-bulk.ls[[at2]] ##Get the df from the df list  which contains the values of the second input attribute
+    merge(at1df, at2df, by=c("stock", "sample", "date", "season"))#Merge both df into a unique df which contains the data from both attributes. New columns are named attribute.x  value.x	unit.x	attribute.y	value.y	unit.y
   })
-
+  
+  #Create the selectInput for seasons. 
   output$select.season<-renderUI({
-    if (is.null(input$at2) == TRUE | input$all == TRUE){
+    if (is.null(input$at2) == TRUE | input$all == TRUE){ #If attr 2 is empty OR the checkbox is selected, the selectInput for seasons is not shown
       return()
     }else{
       options<- op1()
@@ -60,14 +63,16 @@ shinyServer(function(input, output) {
                   selected = NULL)
     }
   })
+  #Reactive object to subset the op1 object depending on the season input. 
+  #It's used to determine which stock are available for a given attribute and season.
   op2<-reactive({
-    if (is.null(input$at2) == TRUE){
+    if (is.null(input$at2) == TRUE){ #If attr 2 is empty do nothing
       return()
     }else{
       all<-input$all
       year=input$season
       d<-op1()
-      if(all == TRUE){
+      if(all == TRUE){#If the checkbox is selected, don't subset the op1 and select all years
         op1()
       }else{
       subset(d, season==year)
@@ -75,7 +80,7 @@ shinyServer(function(input, output) {
     }
   })
   output$select.stk<-renderUI({
-    if (is.null(input$season) == TRUE){
+    if (is.null(input$season) == TRUE){ #If season is empty, the selectInput for stock is not shown
       return()
     }else{
       options<-op2()
@@ -90,93 +95,105 @@ shinyServer(function(input, output) {
   })
  
   
-  #Get the selected values from the page, and print them in the plot.
+  #Get the final dataset using the stock to subset the op2 object
   data<-reactive({
     if (input$go==0){
       return(NULL)
     }else{
       d<-op2()  
       stock<-input$stock
-      #Create a list from the selected values of the selectInput widget. The list will be supplied to the printplot function which needs a stock list as an argument
+      #Create a list of stock from the selected values in the selectInpeut widget. 
       stk.ls[stock]<-stock
+      #Loop over the list of stock and subset the op2 df using the stock name.
+      #It returns a list of df, each one containing values for a unique stock
       ls<-lapply(stk.ls, function(x){
         subset(d, stock==x)})
+      #Bind all df in the ls list
       rbindlist(ls)
     
     }
     })
   
   output$plot<-renderPlot({
-    if (input$go==0){
+    if (input$go==0){  #if the 'Run' button is not clicked, don't start the plot
       return(NULL)
     }else{
     data<-data()
+    #Create a list of stock from the stock names stored in data(), that is, the stocks selected by the user
     stk.ls<-as.list(levels(as.factor(data$stock)))
-#     stock<-input$stock
-    #Create a list from the selected values of the selectInput widget. The list will be supplied to the printplot function which needs a stock list as an argument
-#     stk.ls[stock]<-stock
+    #Get the max value in y and min value in x. This is used to define the position of labels within the plot
     max.y<-max(data$value.y)
     min.x<-min(data$value.x)
-
+    
+    #######################
+    ###cor.plot function###
+    #######################
+    #This function tests for normality of the data, calculates the correlation coefficients for two of attributes
+    
     cor.plot<-function(i, data, y, x){ 
+      #Subset the data to get a unique stock
       d<-subset(data, stock == i)
-      if(length(d$value.x) < 5 | length(d$value.y) < 5){
-        stop("The selected stock has less than 5 values, please select other stock")
+      if(length(d$value.x) < 5 | length(d$value.y) < 5){ #If the stock has less than 5 values the statistic cannot be computed, so stop the execution and print an error
+        stop(paste0("The stock ", i, " has less than 5 values, please remove this stock from your selection"))
       }
-      if(length(d$value.x) > 2000){
+      if(length(d$value.x) > 2000){#If there are more than 2000 values in value.x (attr1), performs a  Anderson-Darling test  from nortest package
         nor.x<-ad.test(d$value.x)
-        }else{
-      nor.x<-shapiro.test(d$value.x)
-        }
-      if(length(d$value.y) > 2000){
+      }else{#When there are less than 2000 values, performs a shapiro test
+        nor.x<-shapiro.test(d$value.x)
+      }
+      if(length(d$value.y) > 2000){#If there are more than 2000 values in value.y (attr2), performs a  Anderson-Darling test  from nortest package
         nor.y<-ad.test(d$value.y)
-      }else{
+      }else{#When there are less than 2000 values, performs a shapiro test
         nor.y<-shapiro.test(d$value.y)
       }
       
-      if (nor.x[["p.value"]] > 0.05 | nor.y[["p.value"]] > 0.05){
+      if (nor.x[["p.value"]] > 0.05 | nor.y[["p.value"]] > 0.05){#If one of p.values obtained in the previous test is greater than 0.05, performs correlation using the Pearson method
+        #Correlation test with Pearson method
         ct<-cor.test(d$value.x, d$value.y, method="pearson")
-#         r=format(ct[["estimate"]], digits=3)
-#         pv=format(ct[["p.value"]], digits=3)
-        cor.res<-data.frame(stock = i, xr = (1.1 * x), yr = (1.15 * y),
-        R=as.character(as.expression(substitute(~~Spearman~coeff~"="~r, 
-                                                list(r=format(ct[["estimate"]], digits=3))))),
-        method=rep("spearman"),
-        xp= (1.1 * x), yp = (1.05 * y),
-        P=as.character(as.expression(substitute(~~P.value~"="~pv, 
-                                                list(pv=format(ct[["p.value"]], digits=3)))))            
-                            )
-        cor.res
+        #Analysis name, it is used to print the type of the analysis in the label
+        method<-"Pearson"
         
-      } else {
+      } else {#If one of p.values obtained in the previous test is greater than 0.05, performs correlation using the Spearman method
         ct<-cor.test(d$value.x, d$value.y, method="spearman", exact=FALSE)
-#         r=as.character(as.expression(paste0("Spearman coeff=", format(ct[["estimate"]], digits=3), "\n")))
-#         pv=paste0("P value=", format(ct[["p.value"]], digits=3))
-        cor.res<-data.frame(stock = i, xr = (1.1 * x), yr = (1.15 * y),
-                            R=as.character(as.expression(substitute(~~Spearman~coeff~"="~r, 
-                                                                    list(r=format(ct[["estimate"]], digits=3))))),
-                            method=rep("spearman"),
-                            xp= (1.1 * x), yp = (1.05 * y),
-                            P=as.character(as.expression(substitute(~~P.value~"="~pv, 
-                                                                     list(pv=format(ct[["p.value"]], digits=3)))))
-                              )
-        cor.res
+        #Analysis name, , it is used to print the type of the analysis in the label
+        method<-"Spearman"
       }
+      
+      #Create a df (8 columns) containg the results of the analysis, and create the labels for the plot
+      #Columns: stock (for stock names), xr an yr (position for R coeff label), R (coeff label), 
+      #method (the used method in correlation test), P(p.value label), xp and yp (coordinates for P label)
+      data.frame(stock = i, 
+                 # R label is placed on the top. y and x are the max and min values in each axis respectively. 
+                 xr = (1.1 * x), yr = (1.15 * y), 
+                 #R label is built from the ct object which stores the cor.test results. 
+                 #            substitute and as.expression are used to create a proper label for ggplot
+                 R=as.character(as.expression(substitute(~~m~coeff~"="~r, 
+                                                         list(r=format(ct[["estimate"]], digits=3), m=method)))),
+                 method=rep(method),
+                 #P label is placed above R label (the y position is multiplied into 1.05 instead of 1.15)
+                 xp= (1.1 * x), yp = (1.05 * y),
+                 #P value, use ct[["p.value"]] from cor.test
+                 P=as.character(as.expression(substitute(~~P.value~"="~pv, 
+                                                         list(pv=format(ct[["p.value"]], digits=3)))))            
+      )
+      
     }
+    #Loop over the list of stock and apply the cor.plot function. A list of the previous df is returned. 
     cor.res<-lapply(stk.ls, cor.plot, data=data, x=min.x, y=max.y)
-    #http://stackoverflow.com/questions/17293522/adding-r2-to-each-facet-in-ggplot2
+    #Bind all the df in the df.list    
+        cor.df<-rbindlist(cor.res)
     
-    
-    cor.df<-rbindlist(cor.res)
-    p <- ggplot(data, aes(value.x, value.y)) + geom_point(aes(colour = factor(stock)), size = 4) #define plot geom (scatter) and map it to lines
+    #define plot geom (scatter) and map it to stock
+    p <- ggplot(data, aes(value.x, value.y)) + geom_point(aes(colour = factor(stock)), size = 4) 
     p <- p + facet_wrap(~stock) +
       geom_point(colour="grey90", size = 1.5) +
-#       aes(shape = factor(stock)) + # maps the shape of the point to lines
-      scale_shape_discrete(name="stock") + # The name of the legend, it's necessary to define it twice since we have 'colours' and 'shape' defined
-      scale_color_discrete(name="stock") +
+      scale_color_discrete(name="stock") +# The name of the legend,
       geom_smooth(method="lm")+
+      # Axis labs, attribute name (unit)
       labs(x=paste0(input$at1, " ", "(", unique(data$unit.x), ")" ), y=paste0(input$at2, " ", "(", unique(data$unit.y), ")" )) + #labs for both axis
+      # R label, correlation coefficient
       geom_text(data=cor.df, aes(x=xr, y=yr, label=R, group=NULL),size=4, hjust=0, parse=T)  +
+      # P label, p.value
       geom_text(data=cor.df, aes(x=xp, y=yp, label=P, group=NULL),size=4, hjust=0, parse=T) 
     print(p)
     
