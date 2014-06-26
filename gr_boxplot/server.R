@@ -1,4 +1,4 @@
-#server.R, eval_disp
+#server.R, grouped boxplot
 #Load libraries for shiny, plots and PgSQL connection
 library(shiny)
 library(ggplot2)
@@ -29,17 +29,17 @@ bulkdata<- dbGetQuery(con, "SELECT s2.uniquename AS stock, esp.value AS season,
                       WHERE cvp.type_id = 43425")
 bulkdata$value<-as.numeric(bulkdata$value)
 postgresqlCloseConnection(con)
-#Script where the dataplot function is defined
-source("get_data.R")
+
+#Define an empty list to store the user selected stock names
 stk.ls<-list()
 shinyServer(function(input, output) {
-  
+  #Reactive object to subset the bulkdata depending on the attribute input. It will be used to determine which stocks are available for a given attribute.
   options<-reactive({
     subset(bulkdata, attribute==input$attribute)
   })
-  
+  #Create the selectInput for a list of stocks. 
   output$select.stk<-renderUI({
-    if (is.null(input$attribute) == TRUE){
+    if (is.null(input$attribute) == TRUE){#Returns nothing if there is no attribute selected
       return()
     }else{
       options<-options()
@@ -52,58 +52,38 @@ shinyServer(function(input, output) {
                   multiple=TRUE)                  
     }
   })
-    
+  #Create a df containing the user selected values.        
   data<-reactive({
     if (input$go==0){
       return(NULL)
     }else{
       stock<-input$stock
-      stk.ls[stock]<-stock
-      if (input$control == T){
-        stk.ls["control"]<-"chaendler" ##Add the control line name to the list of stocks
+      stk.ls[stock]<-stock #Create a list from the multiple selectInput, each selected stock is appended to the list
+      if (input$control == T){ # If the checkbox of control values is clicked, add the control stock name to the list of stocks
+        stk.ls["control"]<-"chaendler" 
       }
-#       stk.ls["control"]<-"chaendler"  
-      
+      #Loop over the list of stocks, subset the bulkdata df with the user input for attributes and stock
+      #Lapply create a list, in this case a list of df, each one corresponding to the subsetted df for the combiation of stock and attribute
       data.ls<-lapply(stk.ls, function(x){
-        subdata<-subset(bulkdata, attribute==input$attribute & stock==x)
-        if (nrow(subdata) == 0) {
-          err<-paste("The line", x, "don't have values for this phenotypic attribute, please choose other stock or attribute")
-          stop(err)}
-        subdata
-        
+        subset(bulkdata, attribute==input$attribute & stock==x)  
       })
-      rbindlist(data.ls)
+      rbindlist(data.ls) #Bind all the df stored in the data.ls list of df
     }
   })
-  
-  
-#     data<-reactive({
-#     attribute <- input$attribute  
-#     
-#     stock<-input$stocks
-#     #Create a list from the selected values of the selectInput widget. The list will be supplied to the printplot function which needs a stock list as an argument   
-#     stk.ls[stock]<-stock
-#     if (is.null(stock) == TRUE){
-#       stop("There are no values selected, please enter your choices")
-#     }
-#     subset(bulkdata, attribute=attribute, stock) query_db(attr=attribute, stk=stk.ls, ctrl=input$control)
-#     })
-#     
-    output$map<-renderPlot({
+    #############
+    ###Boxplot###
+    #############
+    output$plot<-renderPlot({
       if (input$go==0){
         return(NULL)
       }else{
         data<-data()
         p<-ggplot(data, aes(factor(season), value)) +
         labs(x="year", y = paste0(input$attribute, " ", "(", unique(data$unit), ")")) +
-        scale_fill_discrete(name="line") #legend title
+        scale_fill_discrete(name="stock") #legend title
 
-        p <- p  +  geom_boxplot(aes(fill = factor(stock))) 
+        p <- p  +  geom_boxplot(aes(fill = factor(stock))) #Map color to stock
         print(p)
       }
   })
-    output$table1<- renderDataTable({
-      data()
-    })
-  
 })
