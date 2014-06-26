@@ -37,8 +37,10 @@ shinyUI(fluidPage(
                   label="Choose a phenotypic attribute",
                   choices = attr_names,
                     selected = NULL),
-      uiOutput("select.stk"),
       uiOutput("select.season"),
+      
+      uiOutput("select.stk"),
+      
       actionButton("go","Run")
 
     ),

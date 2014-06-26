@@ -37,12 +37,40 @@ shinyServer(function(input, output) {
   op1<-reactive({
     subset(bulkdata, attribute==input$attribute)
   })
+  
+  #Create the selectInput for seasons
+  output$select.season<-renderUI({
+    if (is.null(input$attribute) == TRUE){
+     return(NULL)
+    }else{
+      options<- op1()
+      seas<-as.vector(options[["season"]])
+      #       seas<-input$stock      
+      selectInput("season",
+                  label = "Choose a season",
+                  choices = seas,
+                  selected = NULL)
+    }
+    
+  })
+  
+  #Reactive object to subset the op1 object depending on the stock input. It will be used to determine which seasons are available for a given attribute and stock. 
+  op2<-reactive({
+    if (is.null(input$season) == TRUE){ #If op1 is empty, do nothing. Prevents for errors at start the app
+      NULL
+    }else{
+      d<-op1()
+      y<-input$season
+      subset(d, season==y)
+    }
+  })
+  
   #Create the selectInput for one stock.
   output$select.stk<-renderUI({
-    if (is.null(input$attribute) == TRUE){
-      return()
+    if (is.null(op2()) == TRUE){
+      return(NULL)
     }else{
-      options<-op1()
+      options<-op2()
       stk.opt<-as.vector(options[["stock"]])
       
       selectInput("stock",
@@ -51,48 +79,28 @@ shinyServer(function(input, output) {
                   selected = NULL)                  
     }
   })
-  #Reactive object to subset the op1 object depending on the stock input. It will be used to determine which seasons are available for a given attribute and stock. 
-  op2<-reactive({
-    if (nrow(op1) < 1){ #If op1 is empty, do nothing. Prevents for errors at start the app
-      return()
-    }else{
-   subset(op1(), stock==input$stock)
-    }
-  })
-  #Create the selectInput for seasons. 
-  output$select.season<-renderUI({
-    if (is.null(input$attribute) == TRUE){
-      return()
-    }else{
-      options<- op1()
-      seas<-as.vector(options[["season"]])
-      
-      selectInput("season",
-                  label = "Choose a season",
-                  choices = seas,
-                  selected = NULL)
-    }
-    
-  })
-    
+
+
   #Get the dataset which will be ploted latter. Subset bulkdata with the selected attribute, stock and year 
   data<-reactive({
-    if (input$go==0){  # if the 'Run' button is not clicked, return nothing.
+    if (is.null(input$season) == TRUE){  # if the 'Run' button is not clicked, return nothing.
          return()
       }else{
-    attr <- input$attribute  
-    stock<-input$stock
-    year<-input$season
- 
-    subset(bulkdata, attribute==attr & stock==stock & season==year)
+#     attr <- input$attribute  
+#     stock<-input$stock
+#     year<-
+# #  
+#     subset(bulkdata, attribute==attr & stock==stock & season==year)
+#       data<-
+      subset(op2(), stock==input$stock)
     }  
 })
   ####################
   ###QQ plot output###       
   ####################
   output$qqplot<-renderPlot({ 
-    if (input$go  ==0){  # if the 'Run' button is not clicked, return nothing.
-      
+#     if (input$go  ==0){  # if the 'Run' button is not clicked, return nothing.
+    if (is.null(input$season) == TRUE){  # if the 'Run' button is not clicked, return nothing.
       return()
     }else{
     data<-data()
