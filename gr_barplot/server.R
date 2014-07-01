@@ -38,20 +38,20 @@ shinyServer(function(input, output) {
   #Reactive object to subset the bulkdata depending on the attribute input. It will be used to determine which stocks are available for a given attribute.
   options<-reactive({
     subset(bulkdata, attribute==input$attribute)
-    })
+  })
   
   #Create the selectInput for one stock.
   output$stk<-renderUI({
     if (is.null(input$attribute) == TRUE | input$mult == TRUE){ #Returns nothing if there is no attribute selected or the user has checked the multiple-stock checkbox.
-        return()
+      return()
     }else{
       options<-options()
       stk.opt<-as.vector(options[["stock"]])#Get the stock names from the subsetted df, transforms it in a vector. 
-     
+      
       selectInput("stock",
-                        label="Select an individual stock",
-                        choices = stk.opt,
-                        selected = NULL)                  
+                  label="Select an individual stock",
+                  choices = stk.opt,
+                  selected = NULL)                  
     }
   })
   
@@ -64,69 +64,74 @@ shinyServer(function(input, output) {
       options<-options()
       stk.opt<-as.vector(options[["stock"]])
       selectInput("stkList",
-                        label="Choose a stock",
-                        choices = stk.opt,
-                        selected = NULL,
-                        multiple=TRUE)
+                  label="Choose a stock",
+                  choices = stk.opt,
+                  selected = NULL,
+                  multiple=TRUE)
     }
   })
   
   
   
   #Creates a df containing the user selected values.       
-data<-reactive({
-  if (input$go==0){ # if the 'Run' button is not clicked, returns nothing.
+  data<-reactive({
+    if (input$go==0){ # if the 'Run' button is not clicked, returns nothing.
       return(NULL)
-  }else{
-      if (input$mult == FALSE){ #if the checkbox is not selected, get the stock from input$stock (unique stock selection)
-      stock<-input$stock
-        }else{ # Else, get the stocks from the input$stkList (multiple stock selection)
-      stock<-input$stkList
-        }
-    #Creates a list of stock from the users selection and add the control stock
-    stk.ls[stock]<-stock
-    stk.ls["control"]<-"chaendler"  
-    if (stock == "chaendler"){ #Stop if the user selects chaendler stock (control stock)
-      stop("You have selected the control stock, please select other stock to compare with the control.")
-    }
-    #Loops over the stk.ls list and subset for the given stock and the selected attribute. Creates a list of df, each one corresponding to one stock and one attribute
-    data.ls<-lapply(stk.ls, function(x){
-    subdata<-subset(bulkdata, attribute==input$attribute & stock==x)
-    if (nrow(subdata) == 0) {
-      err<-paste("The line", x, "don't have values for this phenotypic attribute, please choose other stock or attribute")
-      stop(err)}
-      subdata
-
-    })
-    #Bind all the df in the data.ls list, creates a unique df
-    rbindlist(data.ls)
-  }
-  })
-      
-output$plot<-renderPlot({  
-  if (input$go==0){ # if the 'Run' button is not clicked, returns nothing.
-      return(NULL)
-  }else{  
-  
-  attribute <- input$attribute  
-  if (input$mult == FALSE){#if the checkbox is not selected, get the stock from input$stock (unique stock selection)
-    stock<-input$stock
-  }else{  # Else, get the stocks from the input$stkList (multiple stock selection)
-    stock<-input$stkList
-  }
-  #Create a list from the selected values of the selectInput widget. The list will be supplied to the printplot function which needs a stock list as an argument     
-  stk.ls[stock]<-stock
-
-  data<-data()
-#Execute the function defined in barplot.R or plot_no_stat.R depending on the checkbox
-    if (input$mult == FALSE){
-      p<-printplot(data, stk=stk.ls)
     }else{
-      p<-s.plot(data, stk=stk.ls)
+      if (input$mult == FALSE){ #if the checkbox is not selected, get the stock from input$stock (unique stock selection)
+        stock<-input$stock
+        validate( #Show a message if the user selects chaendler stock (control stock)
+          need(stock != "chaendler","You have selected the control stock, please select other stock to compare with the control." )
+        )
+      }else{ # Else, get the stocks from the input$stkList (multiple stock selection)
+        stock<-input$stkList
+      }
+      
+      #Creates a list of stock from the users selection and add the control stock
+      stk.ls[stock]<-stock
+      stk.ls["control"]<-"chaendler"  
+    
+      #Loops over the stk.ls list and subset for the given stock and the selected attribute. Creates a list of df, each one corresponding to one stock and one attribute
+      data.ls<-lapply(stk.ls, function(x){
+        subdata<-subset(bulkdata, attribute==input$attribute & stock==x)
+        validate(#Avoid red error message to be shown when the user changes the attribute. Meanwhile, print the message "waiting for your selection"
+          need(nrow(subdata)>0, "Waiting for your selection")
+        )
+        subdata
+        
+      })
+      #Bind all the df in the data.ls list, creates a unique df
+      rbindlist(data.ls)
     }
- print(p)
-}
-})
-
-
+  })
+  alpha<-reactive({
+    input$alpha
+  })
+  
+  output$plot<-renderPlot({  
+    if (input$go==0){ # if the 'Run' button is not clicked, returns nothing.
+      return(NULL)
+    }else{  
+      data<-data()
+      attribute <- input$attribute  
+      if (input$mult == FALSE){#if the checkbox is not selected, get the stock from input$stock (unique stock selection)
+        stock<-input$stock
+      }else{  # Else, get the stocks from the input$stkList (multiple stock selection)
+        stock<-input$stkList
+      }
+      #Create a list from the selected values of the selectInput widget. The list will be supplied to the printplot function which needs a stock list as an argument     
+      stk.ls[stock]<-stock
+      
+    
+      #Execute the function defined in barplot.R or plot_no_stat.R depending on the checkbox
+      if (input$mult == FALSE){
+        p<-printplot(data, stk=stk.ls)
+      }else{
+        p<-s.plot(data, stk=stk.ls)
+      }
+      print(p)
+    }
+  })
+  
+  
 })

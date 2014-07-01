@@ -46,27 +46,33 @@ shinyServer(function(input, output) {
     at2=input$at2
     at1df<-bulk.ls[[at1]] #Get the df from the df list which contains the values of the first input attribute
     at2df<-bulk.ls[[at2]] ##Get the df from the df list  which contains the values of the second input attribute
-    merge(at1df, at2df, by=c("stock", "sample", "date", "season"))#Merge both df into a unique df which contains the data from both attributes. New columns are named attribute.x  value.x	unit.x	attribute.y	value.y	unit.y
-  })
+    data<-merge(at1df, at2df, by=c("stock", "sample", "date", "season"))#Merge both df into a unique df which contains the data from both attributes. New columns are named attribute.x  value.x	unit.x	attribute.y	value.y	unit.y
+    validate(#Avoid red error message to be shown when the two selected attributes cannot be compare (they're not in the same year). Meanwhile, print the message.      need(nrow(data) > 1, "It's not possible to compare the two selected attributes, please select another pair of values."))
+    data
+    })
   
+
   #Create the selectInput for seasons. 
   output$select.season<-renderUI({
-    if (is.null(input$at2) == TRUE | input$all == TRUE){ #If attr 2 is empty OR the checkbox is selected, the selectInput for seasons is not shown
+    if (input$all == TRUE){
       return()
+    }
+    if (input$at2 == ""){ #If attr 2 is empty OR the checkbox is selected, the selectInput for seasons is not shown
+      seas<-""
     }else{
-      options<- op1()
+      options<- op1()    
       seas<-as.vector(options[["season"]])
-      
+    }
       selectInput("season",
                   label = "Choose a season",
                   choices = seas,
                   selected = NULL)
-    }
+    
   })
   #Reactive object to subset the op1 object depending on the season input. 
   #It's used to determine which stock are available for a given attribute and season.
   op2<-reactive({
-    if (is.null(input$at2) == TRUE){ #If attr 2 is empty do nothing
+    if (input$at2 == ""){ #If attr 2 is empty do nothing
       return()
     }else{
       all<-input$all
@@ -80,18 +86,24 @@ shinyServer(function(input, output) {
     }
   })
   output$select.stk<-renderUI({
-    if (is.null(input$season) == TRUE){ #If season is empty, the selectInput for stock is not shown
-      return()
+    options<-op2()  
+    
+    if (input$season == ""){ #If season is empty, the selectInput for stock is not shown
+      stk.opt<-NULL
     }else{
-      options<-op2()
-      stk.opt<-as.vector(options[["stock"]])
       
+      stk.opt<-as.vector(options[["stock"]])
+    }
+    if (input$all == TRUE){
+      
+      stk.opt<-as.vector(options[["stock"]])
+    }
       selectInput("stock",
                   label="Choose a stock",
                   choices = stk.opt,
                   selected = NULL,
                   multiple=TRUE)                  
-    }
+    
   })
  
   
@@ -113,12 +125,17 @@ shinyServer(function(input, output) {
     
     }
     })
+
   
   output$plot<-renderPlot({
     if (input$go==0){  #if the 'Run' button is not clicked, don't start the plot
       return(NULL)
     }else{
     data<-data()
+
+    validate(#Avoid red error message to be shown when the user changes the attribute. Meanwhile, print the message "waiting for your selection"
+      need(nrow(data)>1, "Waiting for your selection")
+      )
     #Create a list of stock from the stock names stored in data(), that is, the stocks selected by the user
     stk.ls<-as.list(levels(as.factor(data$stock)))
     #Get the max value in y and min value in x. This is used to define the position of labels within the plot

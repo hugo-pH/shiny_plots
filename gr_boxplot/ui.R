@@ -20,7 +20,10 @@ postgresqlCloseConnection(con)
 shinyUI(fluidPage(
   sidebarLayout(
     sidebarPanel(
-      #Four elements, two selectInput, one is defined below and select attributes, the other one is defined in server.R and select seasons.
+      #Two selectInputs: attribute and stock
+      #The attribute input is fixed and gets the values from the DB
+      #The stock input options depends on the attribute selected previously. Defined in server.R
+      #The 'Run' button prevents shiny for starting before any option is selected.
       #A checkbox to add control values and the Run button to avoid error messages appears at start
       selectInput("attribute",
                   label="Choose a phenotypic attribute",

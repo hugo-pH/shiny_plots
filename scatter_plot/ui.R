@@ -33,21 +33,30 @@ shinyUI(fluidPage(
                   label="Choose the x phenotypic attribute",
                   choices = attr_names,
                   selected = NULL),
-      selectInput("at2",
-                  label="Choose the y phenotypic attribute",
+      
+      selectizeInput("at2",
+                  label="Choose the x phenotypic attribute",
                   choices = attr_names,
-                  selected = NULL),
+                  options = list(
+                    placeholder = 'Please select an option below',
+                    onInitialize = I('function() { this.setValue(""); }'))
+                    ),
       checkboxInput("all",
                     label = "Select all years",
                     value = FALSE),
+#       uiOutput("select.at2"),
       uiOutput("select.season"),
       uiOutput("select.stk"),
-      actionButton("go","Run")
+      actionButton("go","Run"),
+      tags$style(type="text/css",
+           "#map.shiny-output-error { color: black;}",
+           "#map.shiny-output-error:before { content: ; }"
+      )
     ),
     
     mainPanel( 
+#       verbatimTextOutput('text'),
       plotOutput('plot'),
-      
       #Avoid error messages to be printed in red color
       tags$style(type="text/css",
                  "#map.shiny-output-error { color: inherit;}",

@@ -67,7 +67,11 @@ shinyServer(function(input, output) {
       
       return(NULL)
     }else{ # Else, print the plot. The printplot function is defined in barplot.R
-        p<-printplot(data=data())
+      data<-data()
+      validate(#Avoid red error message to be shown when the user changes the attribute. Meanwhile, print the message "waiting for your selection"
+        need(nrow(data)>0, "Waiting for your selection")
+      )
+        p<-printplot(data)
         print(p)      
     }
         })
@@ -78,6 +82,9 @@ shinyServer(function(input, output) {
       return(NULL)
     }else{ #Else, shapiro.test on the attribute values.
     data<-data()
+    validate(#Avoid red error message to be shown when the user changes the attribute. Meanwhile, print the message "waiting for your selection"
+      need(nrow(data)>0, "Waiting for your selection")
+    )
     shap.res<-shapiro.test(data$value)
     shap.res  
     }
@@ -89,6 +96,9 @@ shinyServer(function(input, output) {
       return(NULL)
     }else{ # Else, leveneTest on the attribute values over the stocks. 
     data<-data()
+    validate(#Avoid red error message to be shown when the user changes the attribute. Meanwhile, print the message "waiting for your selection"
+      need(nrow(data)>0, "Waiting for your selection")
+    )
     lev.res<-leveneTest(value ~ stock, data=data)
     lev.res
     }
@@ -101,6 +111,9 @@ shinyServer(function(input, output) {
     }else{ #Perform a test, ANOVA or Kruskal depending on the obtained levene.Test p.value 
     #If the p.value is > 0.05 an ANOVA will be performed, else a kruskal.test will be performed. 
     data<-data()
+    validate(#Avoid red error message to be shown when the user changes the attribute. Meanwhile, print the message "waiting for your selection"
+      need(nrow(data)>0, "Waiting for your selection")
+    )
     lev.res<-leveneTest(value ~ as.factor(stock), data=data)
     lev.pval<-lev.res[["Pr(>F)"]][[1]]
         if (lev.pval  > 0.05){ 
@@ -120,6 +133,9 @@ shinyServer(function(input, output) {
     }else{ 
     #Perform a test, ANOVA or Kruskal depending on the obtained levene.Test p.value 
     data<-data()
+    validate(#Avoid red error message to be shown when the user changes the attribute. Meanwhile, print the message "waiting for your selection"
+      need(nrow(data)>0, "Waiting for your selection")
+    )
     lev.res<-leveneTest(value ~ as.factor(stock), data=data)
     lev.pval<-lev.res[["Pr(>F)"]][[1]]
     if (lev.pval > 0.05){#If the p.value is > 0.05 an ANOVA will be performed,

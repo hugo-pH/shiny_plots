@@ -1,4 +1,4 @@
-#server.R, eval_disp
+#server.R, homogeneity
 #Load libraries for shiny, plots and PgSQL connection
 library(shiny)
 library(ggplot2)
@@ -62,20 +62,23 @@ shinyServer(function(input, output) {
       subset(bulkdata, attribute==input$attribute & season==input$season)
     }
   })
-  #############
-  ###Boxplot###
-  #############
+
+  ############
+  ##Boxplot###
+  ############
   output$map<-renderPlot({
     if (input$go==0){ # if the 'Run' button is not clicked, return nothing.
       return()
     }else{
       data<-data()
-      p<-ggplot(data(), aes(factor(stock), value)) +
-        labs(x="Stock", y = paste0(input$attribute, " ", "(", unique(data$unit), ")")) +
-        scale_fill_discrete(guide=FALSE) + #No legend
-        theme(axis.text.x=element_text(face="bold", angle=60, hjust=1,  size=12))#Turn 60º the labels of x axis
-      
-      p <- p  +  geom_boxplot(aes(fill = factor(stock))) 
+      validate(#Avoid red error message to be shown when the user changes the attribute. Meanwhile, print the message "waiting for your selection"
+        need(nrow(data)>1, "Waiting for your selection")
+      )
+      p<-ggplot(data, aes(factor(stock), value)) +
+        xlab("Stock") +
+        ylab(paste0(input$attribute, " ", "(", unique(data$unit), ")")) + 
+        scale_fill_discrete(guide=FALSE) +
+        geom_boxplot(aes(fill = factor(stock)))
       print(p)
     } 
   })
@@ -84,39 +87,40 @@ shinyServer(function(input, output) {
   ###Bartlett test###
   ###################
   output$bart<- renderPrint({
-    if (input$go==0){ # if the 'Run' button is not clicked, return nothing.
-      return()
-    }else{
+    
     data<-data()
+    validate(#Avoid red error message to be shown when the user changes the attribute. Meanwhile, print the message "waiting for your selection"
+      need(nrow(data)>1, "Waiting for your selection")
+    )
     bart.res<-bartlett.test(value ~ stock, data=data)
     bart.res
-    }
+    
   })
   
   #################
   ###Levene test###
   #################
   output$lev<- renderPrint({
-    if (input$go==0){ # if the 'Run' button is not clicked, return nothing.
-      return(NULL)
-    }else{
     data<-data()
-    lev.res<-leveneTest(value ~ stock, data=data)
+    validate(#Avoid red error message to be shown when the user changes the attribute. Meanwhile, print the message "waiting for your selection"      
+      need(nrow(data)>1, "Waiting for your selection")
+    )
+    lev.res<-leveneTest(value ~ as.factor(stock), data=data)
     lev.res
-    }
+    
   })
   
   ##################
   ###Fligner test###
   ##################
   output$flig<- renderPrint({
-    if (input$go==0){ # if the 'Run' button is not clicked, return nothing.
-      return(NULL)
-    }else{
     data<-data()
+    validate(#Avoid red error message to be shown when the user changes the attribute. Meanwhile, print the message "waiting for your selection"
+      need(nrow(data)>1, "Waiting for your selection")
+    )
     flig.res<-fligner.test(data$value, as.factor(data$stock))
     flig.res
-    }
+
   })
   
 })

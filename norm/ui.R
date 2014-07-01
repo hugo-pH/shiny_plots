@@ -1,4 +1,4 @@
-#ui.R, disperssion
+#ui.R, norm
 #Load library for PgSQL connection
 library("RPostgreSQL")
 #Connect to the database
@@ -29,14 +29,17 @@ shinyUI(fluidPage(
   sidebarLayout(
     sidebarPanel(
       #Three selectInputs: attribute, stock and season
-      #The attribute input is fixed and gets the values from the DB
+      #The attribute input is fixed and it gets the values from the DB
       #The stock input options depends on the attribute. Defined in server.R
       #The season input options depends on the attribute and the stock selected previously. Defined in server.R
       #The 'Run' button prevents shiny for starting before any option is selected. 
-      selectInput("attribute",
+      selectizeInput("attribute",
                   label="Choose a phenotypic attribute",
                   choices = attr_names,
-                    selected = NULL),
+                  options = list(
+                    placeholder = 'Please select an option below',
+                    onInitialize = I('function() { this.setValue(""); }')) 
+                  ),
       uiOutput("select.season"),
       
       uiOutput("select.stk"),

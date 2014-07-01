@@ -32,9 +32,7 @@ shinyUI(fluidPage(
                     value = FALSE),
       uiOutput("stk"),
       uiOutput("list"),
-      actionButton("go","Run")
-      
-          
+      actionButton("go","Run")        
   ),
 mainPanel( 
   

@@ -78,6 +78,9 @@ shinyServer(function(input, output) {
         return(NULL)
       }else{
         data<-data()
+        validate(#Avoid red error message to be shown when the user changes the attribute. Meanwhile, print the message "waiting for your selection"
+          need(nrow(data)>1, "Waiting for your selection")
+        )
         p<-ggplot(data, aes(factor(season), value)) +
         labs(x="year", y = paste0(input$attribute, " ", "(", unique(data$unit), ")")) +
         scale_fill_discrete(name="stock") #legend title

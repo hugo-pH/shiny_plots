@@ -29,8 +29,6 @@ bulkdata<- dbGetQuery(con, "SELECT s2.uniquename AS stock, esp.value AS season,
                       WHERE cvp.type_id = 43425")
 bulkdata$value<-as.numeric(bulkdata$value)
 postgresqlCloseConnection(con)
-#Script where the dataplot function is defined
-# source("get_data.R")
 
 shinyServer(function(input, output) {
   #Reactive object to subset the bulkdata depending on the attribute input. It will be used to determine which stocks and seasons are available for a given attribute.
@@ -40,18 +38,17 @@ shinyServer(function(input, output) {
   
   #Create the selectInput for seasons
   output$select.season<-renderUI({
-    if (is.null(input$attribute) == TRUE){
-     return(NULL)
+    if (input$attribute == ""){
+     seas<-NULL
     }else{
       options<- op1()
       seas<-as.vector(options[["season"]])
-      #       seas<-input$stock      
+    }
       selectInput("season",
                   label = "Choose a season",
                   choices = seas,
                   selected = NULL)
-    }
-    
+            
   })
   
   #Reactive object to subset the op1 object depending on the stock input. It will be used to determine which seasons are available for a given attribute and stock. 
@@ -67,31 +64,25 @@ shinyServer(function(input, output) {
   
   #Create the selectInput for one stock.
   output$select.stk<-renderUI({
-    if (is.null(op2()) == TRUE){
-      return(NULL)
+    if (input$season == ""){
+  stk.opt<-NULL
     }else{
       options<-op2()
       stk.opt<-as.vector(options[["stock"]])
-      
+    }  
       selectInput("stock",
                   label="Choose a stock",
                   choices = stk.opt,
                   selected = NULL)                  
-    }
+    
   })
 
 
   #Get the dataset which will be ploted latter. Subset bulkdata with the selected attribute, stock and year 
   data<-reactive({
-    if (is.null(input$season) == TRUE){  # if the 'Run' button is not clicked, return nothing.
+    if (is.null(input$stock) == TRUE){  # if the 'Run' button is not clicked, return nothing.
          return()
       }else{
-#     attr <- input$attribute  
-#     stock<-input$stock
-#     year<-
-# #  
-#     subset(bulkdata, attribute==attr & stock==stock & season==year)
-#       data<-
       subset(op2(), stock==input$stock)
     }  
 })
@@ -99,11 +90,13 @@ shinyServer(function(input, output) {
   ###QQ plot output###       
   ####################
   output$qqplot<-renderPlot({ 
-#     if (input$go  ==0){  # if the 'Run' button is not clicked, return nothing.
-    if (is.null(input$season) == TRUE){  # if the 'Run' button is not clicked, return nothing.
+    if (input$go==0){  # if the 'Run' button is not clicked, return nothing.
       return()
     }else{
     data<-data()
+    validate(#Avoid red error message to be shown when the user changes the attribute. Meanwhile, print the message "waiting for your selection"
+      need(nrow(data)>1, "Waiting for your selection")
+    )
     qqnorm(data$value)  #QQ plot of the subsetted values
     }
     })
@@ -117,6 +110,9 @@ shinyServer(function(input, output) {
       return()
     }else{
     data<-data()
+    validate(#Avoid red error message to be shown when the user changes the attribute. Meanwhile, print the message "waiting for your selection"
+      need(nrow(data)>1, "Waiting for your selection")
+    )
     h<-ggplot(data(), aes(x = value)) +
     geom_histogram(aes(x=value, y=..density.., fill = ..density..)) + #use density instead of counts, nicer view
     geom_density() +  
@@ -131,13 +127,12 @@ shinyServer(function(input, output) {
   ###Shapiro test output###       
   #########################
   output$norm<-renderPrint({
-    if (input$go==0){
-        return()
-    }else{
     data<-data()
+    validate(#Avoid red error message to be shown when the user changes the attribute. Meanwhile, print the message "waiting for your selection"
+      need(nrow(data)>1, "Waiting for your selection")
+    )
     options(contrasts=c("contr.sum","contr.poly")) 
     shap.res<-shapiro.test(data$value)
     shap.res  
-    }
   })
   })
