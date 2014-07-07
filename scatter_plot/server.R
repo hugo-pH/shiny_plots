@@ -47,7 +47,8 @@ shinyServer(function(input, output) {
     at1df<-bulk.ls[[at1]] #Get the df from the df list which contains the values of the first input attribute
     at2df<-bulk.ls[[at2]] ##Get the df from the df list  which contains the values of the second input attribute
     data<-merge(at1df, at2df, by=c("stock", "sample", "date", "season"))#Merge both df into a unique df which contains the data from both attributes. New columns are named attribute.x  value.x	unit.x	attribute.y	value.y	unit.y
-    validate(#Avoid red error message to be shown when the two selected attributes cannot be compare (they're not in the same year). Meanwhile, print the message.      need(nrow(data) > 1, "It's not possible to compare the two selected attributes, please select another pair of values."))
+    validate(#Avoid red error message to be shown when the two selected attributes cannot be compare (they're not in the same year). Meanwhile, print the message.
+      need(nrow(data) > 1, "It's not possible to compare the two selected attributes, please select another pair of values."))
     data
     })
   
