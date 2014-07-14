@@ -20,11 +20,11 @@ colnames(dataplot)<-c("stock", "season", "attribute", "unit",  "mean", "sd")
 
 #Define basic plots
 #Plot for values with significant differences. Define colours
-plot_sig<-p <- ggplot(data=dataplot, aes(x=stock, y=mean)) +
+plot_sig<- ggplot(data=dataplot, aes(x=stock, y=mean)) +
                scale_fill_manual(values=c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"), guide=FALSE)
 
 #Plot for values without significant differences,use only one colour
-plot_no<- p <- ggplot(data=dataplot, aes(x=stock, y=mean)) +
+plot_no<- ggplot(data=dataplot, aes(x=stock, y=mean)) +
                geom_bar(stat="identity", fill="#009E73") 
 
 #Stats: test for homocedasticity with levene test, if data variance is homogeneous (p.value > 0.05), perform and ANOVA, else perform a Kruskall test. 
