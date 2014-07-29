@@ -104,10 +104,7 @@ shinyServer(function(input, output) {
       rbindlist(data.ls)
     }
   })
-  alpha<-reactive({
-    input$alpha
-  })
-  
+   
   output$plot<-renderPlot({  
     if (input$go==0){ # if the 'Run' button is not clicked, returns nothing.
       return(NULL)
